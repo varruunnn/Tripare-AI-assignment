@@ -1,0 +1,49 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  temporal:
+    image: temporalio/temporal:latest
+    command: ["server", "start-dev", "--ip", "0.0.0.0"]
+    ports:
+      - "7233:7233"
+      - "8233:8233"
+
+  api:
+    build: .
+    command: ["node", "dist/index.js"]
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      SUPPLIER_BASE_URL: http://api:3000
+      REDIS_URL: redis://redis:6379
+      TEMPORAL_ADDRESS: temporal:7233
+    depends_on:
+      redis:
+        condition: service_healthy
+      temporal:
+        condition: service_started
+
+  worker:
+    build: .
+    command: ["node", "dist/temporal/worker.js"]
+    environment:
+      SUPPLIER_BASE_URL: http://api:3000
+      REDIS_URL: redis://redis:6379
+      TEMPORAL_ADDRESS: temporal:7233
+    restart: on-failure
+    depends_on:
+      redis:
+        condition: service_healthy
+      temporal:
+        condition: service_started
+      api:
+        condition: service_started
