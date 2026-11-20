@@ -21,7 +21,7 @@ A containerized **Node.js (TypeScript)** backend service that aggregates hotel o
 **Prerequisites:** Docker Desktop (or Docker Engine with Compose v2).
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/varruunnn/Tripare-AI-assignment
 cd Tripare-AI-assignment
 docker compose up --build
 ```
